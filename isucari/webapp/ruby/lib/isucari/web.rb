@@ -1163,7 +1163,7 @@ module Isucari
       response['user'] = user unless user.nil?
       response['payment_service_url'] = get_payment_service_url
 
-      categories = db.xquery('SELECT * FROM `categories`').to_a
+      categories = Thread.current[:categories]
       response['categories'] = categories
 
       response.to_json
