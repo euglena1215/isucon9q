@@ -342,7 +342,7 @@ module Isucari
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
       buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
-      item_details = items.zip(sellers, buyers).map do |item, seller, buyers|
+      item_details = items.zip(sellers, buyers).map do |item, seller, buyer|
         if seller.nil?
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
