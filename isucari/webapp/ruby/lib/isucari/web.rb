@@ -86,18 +86,18 @@ module Isucari
           ORDER BY FIELD(id, #{user_ids.join(',')})
         SQL
         users = db.xquery(sql).to_a
+        users_by_id = users.group_by {|user| user['id']}
 
         user_ids.map do |user_id|
-          if !users.empty? && user_id == users.first['id']
-            user = users.shift
-
+          user = users_by_id[user_id]&.first
+          if user.nil?
+            nil
+          else
             {
               'id' => user['id'],
               'account_name' => user['account_name'],
               'num_sell_items' => user['num_sell_items']
             }
-          else
-            nil
           end
         end
       end
