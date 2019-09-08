@@ -91,9 +91,8 @@ module Isucari
       end
 
       def get_category_by_id(category_id)
-        category = Thread.current[:categories].select{|c| c['id'] == category_id }.first
+        category = categories.select{|c| c['id'] == category_id }.first
         return if category.nil?
-
         parent_category_name = if category['parent_id'] != 0
           parent_category = get_category_by_id(category['parent_id'])
 
@@ -155,7 +154,6 @@ module Isucari
 
       content_type :json
 
-      Thread.current[:categories] = db.xquery('SELECT * FROM `categories`').to_a
       response = {
         # キャンペーン実施時には還元率の設定を返す。詳しくはマニュアルを参照のこと。
         'campaign' => 0,
@@ -164,6 +162,12 @@ module Isucari
       }
 
       response.to_json
+    end
+
+    def categories
+      return Thread.current[:categories] if Thread.current[:categories].present?
+      Thread.current[:categories] = db.xquery('SELECT * FROM `categories`').to_a
+      return Thread.current[:categories]
     end
 
     # getNewItems
@@ -1138,7 +1142,6 @@ module Isucari
       response['user'] = user unless user.nil?
       response['payment_service_url'] = get_payment_service_url
 
-      categories = Thread.current[:categories]
       response['categories'] = categories
 
       response.to_json
