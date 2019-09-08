@@ -79,7 +79,7 @@ module Isucari
       end
 
       def get_user_simple_by_id(user_id)
-        user = db.xquery('SELECT id, account_name, num_sell_items FROM `users` WHERE `id` = ?', user_id).first
+        user = db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
 
         return if user.nil?
 
@@ -291,18 +291,7 @@ module Isucari
       items = if item_id > 0 && created_at > 0
         # paging
         begin
-          sql = <<~SQL
-          SELECT
-            items.*,
-            users.id as user_id,
-            users.account_name,
-            users.num_sell_items
-          FROM `items`
-          JOIN users
-            on items.seller_id = users.id
-          WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?, ?, ?, ?, ?) AND (`items.created_at` < ?  OR (`items.created_at` <= ? AND `items.id` < ?)) ORDER BY `items.created_at` DESC, `items.id` DESC LIMIT #{TRANSACTIONS_PER_PAGE + 1}
-          SQL
-          db.xquery(sql, user['id'], user['id'], ITEM_STATUS_ON_SALE, ITEM_STATUS_TRADING, ITEM_STATUS_SOLD_OUT, ITEM_STATUS_CANCEL, ITEM_STATUS_STOP, Time.at(created_at), Time.at(created_at), item_id)
+          db.xquery("SELECT * FROM `items` WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?, ?, ?, ?, ?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT #{TRANSACTIONS_PER_PAGE + 1}", user['id'], user['id'], ITEM_STATUS_ON_SALE, ITEM_STATUS_TRADING, ITEM_STATUS_SOLD_OUT, ITEM_STATUS_CANCEL, ITEM_STATUS_STOP, Time.at(created_at), Time.at(created_at), item_id)
         rescue
           db.query('ROLLBACK')
           halt_with_error 500, 'db error'
@@ -318,11 +307,7 @@ module Isucari
       end
 
       item_details = items.map do |item|
-        seller = {
-          'id' => item['user_id'],
-          'account_name' => item['account_name'],
-          'num_sell_items' => item['num_sell_items']
-        }
+        seller = get_user_simple_by_id(item['seller_id'])
         if seller.nil?
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
