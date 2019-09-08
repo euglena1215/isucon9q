@@ -165,9 +165,8 @@ module Isucari
     end
 
     def categories
-      return Thread.current[:categories] if Thread.current[:categories].present?
-      Thread.current[:categories] = db.xquery('SELECT * FROM `categories`').to_a
-      return Thread.current[:categories]
+      Thread.current[:categories] ||= db.xquery('SELECT * FROM `categories`').to_a
+      Thread.current[:categories]
     end
 
     # getNewItems
@@ -1141,7 +1140,6 @@ module Isucari
       response['csrf_token'] = csrf_token
       response['user'] = user unless user.nil?
       response['payment_service_url'] = get_payment_service_url
-      categories = db.xquery('SELECT * FROM `categories`').to_a
       response['categories'] = categories
 
       response.to_json
