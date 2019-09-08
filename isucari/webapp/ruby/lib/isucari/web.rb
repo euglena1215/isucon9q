@@ -88,7 +88,7 @@ module Isucari
         users = db.xquery(sql).to_a
 
         user_ids.map do |user_id|
-          if user_id == users.first['id']
+          if !users.empty? && user_id == users.first['id']
             user = users.shift
 
             {
