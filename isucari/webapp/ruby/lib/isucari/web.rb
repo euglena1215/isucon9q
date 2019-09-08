@@ -173,10 +173,25 @@ module Isucari
 
       items = if item_id > 0 && created_at > 0
         # paging
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, Time.at(created_at), Time.at(created_at), item_id)
+        sql = <<~SQL
+          SELECT *
+          FROM `items`
+          WHERE `status` IN (?, ?)
+            AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?))
+          ORDER BY `created_at` DESC, `id` DESC
+          LIMIT #{ITEMS_PER_PAGE + 1}
+        SQL
+        db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, Time.at(created_at), Time.at(created_at), item_id)
       else
         # 1st page
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
+        sql = <<~SQL
+          SELECT *
+          FROM `items`
+          WHERE `status` IN (?, ?)
+          ORDER BY `created_at` DESC, `id` DESC
+          LIMIT #{ITEMS_PER_PAGE + 1}
+        SQL
+        db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
       end
 
       item_simples = items.map do |item|
@@ -1195,7 +1210,7 @@ module Isucari
     # getReports
     get '/reports.json' do
       transaction_evidences = db.xquery('SELECT * FROM `transaction_evidences` WHERE `id` > 15007')
-      
+
       response = transaction_evidences.map do |transaction_evidence|
         {
           'id' => transaction_evidence['id'],
