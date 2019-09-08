@@ -79,6 +79,7 @@ module Isucari
       end
 
       def batch_get_shippings_by(transaction_evidence_ids)
+        transaction_evidence_ids = transaction_evidence_ids.compact
         sql = <<~SQL
           SELECT
             reserve_id,
@@ -362,7 +363,7 @@ module Isucari
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
       buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
       transaction_evidences = batch_get_transaction_evidences_by_item_ids(items.map{|i| i['id']})
-      shippings = batch_get_shippings_by(transaction_evidences.map{|_, i| i.first['id']})
+      shippings = batch_get_shippings_by(transaction_evidences.map{|_, i| i.first['id'] unless i.nil? })
 
       item_details = items.zip(sellers, buyers).map do |item, seller, buyer|
         if seller.nil?
