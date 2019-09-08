@@ -79,6 +79,8 @@ module Isucari
       end
 
       def batch_get_user_simple_by_id(user_ids)
+        return [] if user_ids.empty?
+
         sql = <<~SQL
           SELECT id, account_name, num_sell_items
           FROM `users`
