@@ -91,8 +91,7 @@ module Isucari
       end
 
       def get_category_by_id(category_id)
-        category = Thread.current[:categories_hash][category_id]
-
+        category = Thread.current[:categories].find{|c| c['id'] == category_id }
         return if category.nil?
 
         parent_category_name = if category['parent_id'] != 0
@@ -157,15 +156,6 @@ module Isucari
       content_type :json
 
       Thread.current[:categories] = db.xquery('SELECT * FROM `categories`').to_a
-      categories_hash = {}
-      Thread.current[:categories].each do |category|
-        categories_hash[category['id']] = {
-          'id' => category['id'],
-          'parent_id' => category['parent_id'],
-          'category_name' => category['category_name'],
-        }
-      end
-      Thread.current[:categories_hash] = categories_hash
       response = {
         # キャンペーン実施時には還元率の設定を返す。詳しくはマニュアルを参照のこと。
         'campaign' => 0,
