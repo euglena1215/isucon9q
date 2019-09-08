@@ -390,7 +390,7 @@ module Isucari
           item_detail['buyey'] = buyer
         end
 
-        transaction_evidence = transaction_evidences[item['id']].first
+        transaction_evidence = transaction_evidences[item['id']]&.first
         unless transaction_evidence.nil?
           shipping = db.xquery('SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?', transaction_evidence['id']).first
           if shipping.nil?
