@@ -227,7 +227,7 @@ module Isucari
           SELECT *
           FROM `items`
           WHERE `status` IN (?, ?)
-          ORDER BY `created_at` DESC, `id` DESC
+          ORDER BY `status` DESC, `created_at` DESC
           LIMIT #{ITEMS_PER_PAGE + 1}
         SQL
         db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
