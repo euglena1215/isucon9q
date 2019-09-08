@@ -625,7 +625,7 @@ module Isucari
       end
 
       begin
-        seller = db.xquery('SELECT * FROM `users` WHERE `id` = ? FOR UPDATE', target_item['seller_id']).first
+        seller = db.xquery('SELECT id FROM `users` WHERE `id` = ?', target_item['seller_id']).first
 
         if seller.nil?
           db.query('ROLLBACK')
@@ -643,7 +643,23 @@ module Isucari
       end
 
       begin
-        db.xquery('INSERT INTO `transaction_evidences` (`seller_id`, `buyer_id`, `status`, `item_id`, `item_name`, `item_price`, `item_description`,`item_category_id`,`item_root_category_id`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', target_item['seller_id'], buyer['id'], TRANSACTION_EVIDENCE_STATUS_WAIT_SHIPPING, target_item['id'], target_item['name'], target_item['price'], target_item['description'], category['id'], category['parent_id'])
+        sql = <<~SQL
+          INSERT INTO `transaction_evidences`
+            (`seller_id`, `buyer_id`, `status`, `item_id`, `item_name`, `item_price`, `item_description`,`item_category_id`,`item_root_category_id`)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SQL
+        db.xquery(
+          sql,
+          target_item['seller_id'],
+          buyer['id'],
+          TRANSACTION_EVIDENCE_STATUS_WAIT_SHIPPING,
+          target_item['id'],
+          target_item['name'],
+          target_item['price'],
+          target_item['description'],
+          category['id'],
+          category['parent_id']
+        )
       rescue
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
@@ -652,21 +668,38 @@ module Isucari
       transaction_evidence_id = db.last_id
 
       begin
-        db.xquery('UPDATE `items` SET `buyer_id` = ?, `status` = ?, `updated_at` = ? WHERE `id` = ?', buyer['id'], ITEM_STATUS_TRADING, Time.now, target_item['id'])
+        sql = <<~SQL
+          UPDATE `items`
+          SET `buyer_id` = ?, `status` = ?, `updated_at` = ?
+          WHERE `id` = ?
+        SQL
+        db.xquery(sql, buyer['id'], ITEM_STATUS_TRADING, Time.now, target_item['id'])
       rescue
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
-        scr = api_client.shipment_create(get_shipment_service_url, to_address: buyer['address'], to_name: buyer['account_name'], from_address: seller['address'], from_name: seller['account_name'])
+        scr = api_client.shipment_create(
+          get_shipment_service_url,
+          to_address: buyer['address'],
+          to_name: buyer['account_name'],
+          from_address: seller['address'],
+          from_name: seller['account_name']
+        )
       rescue
         db.query('ROLLBACK')
         halt_with_error 500, 'failed to request to shipment service'
       end
 
       begin
-        pstr = api_client.payment_token(get_payment_service_url, shop_id: PAYMENT_SERVICE_ISUCARI_SHOPID, token: token, api_key: PAYMENT_SERVICE_ISUCARI_APIKEY, price: target_item['price'])
+        pstr = api_client.payment_token(
+          get_payment_service_url,
+          shop_id: PAYMENT_SERVICE_ISUCARI_SHOPID,
+          token: token,
+          api_key: PAYMENT_SERVICE_ISUCARI_APIKEY,
+          price: target_item['price']
+        )
       rescue
         db.query('ROLLBACK')
         halt_with_error 500, 'payment service is failed'
