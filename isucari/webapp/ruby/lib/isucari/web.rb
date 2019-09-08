@@ -600,13 +600,10 @@ module Isucari
       buyer = get_user
       halt_with_error 404, 'buyer not found' if buyer.nil?
 
-      db.query('BEGIN')
-
       begin
-        target_item = db.xquery('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE', item_id).first
+        target_item = db.xquery('SELECT * FROM `items` WHERE `id` = ?', item_id).first
 
         if target_item.nil?
-          db.query('ROLLBACK')
           halt_with_error 404, 'item not found'
         end
       rescue => e
@@ -614,17 +611,14 @@ module Isucari
         p e
         p e.backtrace
         p ''
-        db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       if target_item['status'] != ITEM_STATUS_ON_SALE
-        db.query('ROLLBACK')
         halt_with_error 403, 'item is not for sale'
       end
 
       if target_item['seller_id'] == buyer['id']
-        db.query('ROLLBACK')
         halt_with_error 403, '自分の商品は買えません'
       end
 
@@ -632,7 +626,6 @@ module Isucari
         seller = db.xquery('SELECT id, address, account_name FROM `users` WHERE `id` = ?', target_item['seller_id']).first
 
         if seller.nil?
-          db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
         end
       rescue => e
@@ -640,15 +633,17 @@ module Isucari
         p e
         p e.backtrace
         p ''
-        db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       category = get_category_by_id(target_item['category_id'])
       if category.nil?
-        db.query('ROLLBACK')
         halt_with_error 500, 'category id error'
       end
+
+      db.query('BEGIN')
+
+      target_item = db.xquery('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE', item_id).first
 
       begin
         sql = <<~SQL
