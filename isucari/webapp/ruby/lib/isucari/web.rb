@@ -81,11 +81,12 @@ module Isucari
       def batch_get_shippings_by(transaction_evidence_ids)
         sql = <<~SQL
           SELECT
-            reserve_id
+            reserve_id,
+            transaction_evidence_id
           FROM `shippings`
           WHERE `transaction_evidence_id` IN (#{transaction_evidence_ids.join(',')})
         SQL
-        db.xquery(sql).to_a.group_by{|i| i['item_id']}
+        db.xquery(sql).to_a.group_by{|i| i['transaction_evidence_id']}
       end
 
       def batch_get_transaction_evidences_by_item_ids(item_ids)
