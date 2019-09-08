@@ -221,8 +221,8 @@ module Isucari
         db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
       end
 
-      item_simples = items.map do |item|
-        seller = get_user_simple_by_id(item['seller_id'])
+      sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
+      item_simples = items.zip(sellers).map do |item, seller|
         halt_with_error 404, 'seller not found' if seller.nil?
 
         category = get_category_by_id(item['category_id'])
