@@ -321,13 +321,12 @@ module Isucari
       item_id = params['item_id'].to_i
       created_at = params['created_at'].to_i
 
-      db.query('BEGIN')
+
       items = if item_id > 0 && created_at > 0
         # paging
         begin
           db.xquery("SELECT * FROM `items` WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?, ?, ?, ?, ?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT #{TRANSACTIONS_PER_PAGE + 1}", user['id'], user['id'], ITEM_STATUS_ON_SALE, ITEM_STATUS_TRADING, ITEM_STATUS_SOLD_OUT, ITEM_STATUS_CANCEL, ITEM_STATUS_STOP, Time.at(created_at), Time.at(created_at), item_id)
         rescue
-          db.query('ROLLBACK')
           halt_with_error 500, 'db error'
         end
       else
@@ -335,22 +334,20 @@ module Isucari
         begin
           db.xquery("SELECT * FROM `items` WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?, ?, ?, ?, ?) ORDER BY `created_at` DESC, `id` DESC LIMIT #{TRANSACTIONS_PER_PAGE + 1}", user['id'], user['id'], ITEM_STATUS_ON_SALE, ITEM_STATUS_TRADING, ITEM_STATUS_SOLD_OUT, ITEM_STATUS_CANCEL, ITEM_STATUS_STOP)
         rescue
-          db.query('ROLLBACK')
           halt_with_error 500, 'db error'
         end
       end
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
       buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
+
       item_details = items.zip(sellers, buyers).map do |item, seller, buyer|
         if seller.nil?
-          db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
         end
 
         category = get_category_by_id(item['category_id'])
         if category.nil?
-          db.query('ROLLBACK')
           halt_with_error 404, 'category not found'
         end
 
@@ -375,7 +372,6 @@ module Isucari
 
         if item['buyer_id'] != 0
           if buyer.nil?
-            db.query('ROLLBACK')
             halt_with_error 404, 'buyer not found'
           end
 
@@ -387,14 +383,12 @@ module Isucari
         unless transaction_evidence.nil?
           shipping = db.xquery('SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?', transaction_evidence['id']).first
           if shipping.nil?
-            db.query('ROLLBACK')
             halt_with_error 404, 'shipping not found'
           end
 
           ssr = begin
             api_client.shipment_status(get_shipment_service_url, 'reserve_id' => shipping['reserve_id'])
           rescue
-            db.query('ROLLBACK')
             halt_with_error 500, 'failed to request to shipment service'
           end
 
@@ -405,8 +399,6 @@ module Isucari
 
         item_detail
       end
-
-      db.query('COMMIT')
 
       has_next = false
       if item_details.length > TRANSACTIONS_PER_PAGE
