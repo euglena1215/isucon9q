@@ -403,7 +403,7 @@ module Isucari
 
         transaction_evidence = transaction_evidences[item['id']]&.first
         unless transaction_evidence.nil?
-          shipping = shippings[transaction_evidence_id['id']]&.first
+          shipping = shippings[transaction_evidence['id']]&.first
           if shipping.nil?
             halt_with_error 404, 'shipping not found'
           end
