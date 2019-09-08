@@ -217,7 +217,7 @@ module Isucari
           FROM `items`
           WHERE `status` IN (?, ?)
             AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?))
-          ORDER BY `created_at` DESC, `id` DESC
+          ORDER BY `status`, `created_at` DESC
           LIMIT #{ITEMS_PER_PAGE + 1}
         SQL
         db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, Time.at(created_at), Time.at(created_at), item_id)
@@ -227,7 +227,7 @@ module Isucari
           SELECT *
           FROM `items`
           WHERE `status` IN (?, ?)
-          ORDER BY `status` DESC, `created_at` DESC
+          ORDER BY `status`, `created_at` DESC
           LIMIT #{ITEMS_PER_PAGE + 1}
         SQL
         db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
@@ -282,9 +282,9 @@ module Isucari
       created_at = params['created_at'].to_i
 
       items = if item_id > 0 && created_at > 0
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) AND category_id IN (?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, category_ids, Time.at(created_at), Time.at(created_at), item_id)
+        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) AND category_id IN (?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `status`,`created_at` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, category_ids, Time.at(created_at), Time.at(created_at), item_id)
       else
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (?) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, category_ids)
+        db.xquery("SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (?) ORDER BY `status`,`created_at` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, category_ids)
       end
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
