@@ -85,7 +85,7 @@ module Isucari
           FROM `transaction_evidences`
           WHERE `item_id` IN (#{item_ids.join(',')})
         SQL
-        db.xquery(sql).to_a.group_by(&:item_id)
+        db.xquery(sql).to_a.group_by{|i| i['item_id']}
       end
 
       def batch_get_user_simple_by_id(user_ids)
