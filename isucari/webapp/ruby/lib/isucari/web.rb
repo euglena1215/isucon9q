@@ -360,8 +360,7 @@ module Isucari
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
       buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
-      transaction_evidences = batch_get_transaction_evidences_by_item_ids(items.map{|i| i['id']})
-      puts transaction_evidences
+      transaction_evidences = batch_get_transaction_evidences_by_item_ids(items.map{|_, i| i.first['id']})
       shippings = batch_get_shippings_by(transaction_evidences.map{|i| i['id']})
 
       item_details = items.zip(sellers, buyers).map do |item, seller, buyer|
