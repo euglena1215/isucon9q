@@ -78,6 +78,30 @@ module Isucari
         db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
       end
 
+      def batch_get_user_simple_by_id(user_ids)
+        sql = <<~SQL
+          SELECT id, account_name, num_sell_items
+          FROM `users`
+          WHERE `id` IN (#{user_ids.join(',')})
+          ORDER BY FIELD(id, #{user_ids.join(',')})
+        SQL
+        users = db.xquery(sql).to_a
+
+        user_ids.map do |user_id|
+          if user_id == users.first['id']
+            user = users.shift
+
+            {
+              'id' => user['id'],
+              'account_name' => user['account_name'],
+              'num_sell_items' => user['num_sell_items']
+            }
+          else
+            nil
+          end
+        end
+      end
+
       def get_user_simple_by_id(user_id)
         user = db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
 
@@ -311,8 +335,8 @@ module Isucari
         end
       end
 
-      item_details = items.map do |item|
-        seller = get_user_simple_by_id(item['seller_id'])
+      sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
+      item_details = items.zip(sellers).map do |item, seller|
         if seller.nil?
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
