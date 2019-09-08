@@ -57,8 +57,10 @@ myisam-recover-options  = BACKUP
 #
 # * Query Cache Configuration
 #
-query_cache_limit	= 1M
-query_cache_size        = 16M
+# クエリキャッシュ
+query_cache_limit = 16M
+query_cache_size = 512M #グローバルバッファ
+query_cache_type = 1
 #
 # * Logging and Replication
 #
@@ -114,10 +116,6 @@ read_buffer_size = 128K
 read_rnd_buffer_size = 1M
 sort_buffer_size = 2M
  
-# クエリキャッシュ
-query_cache_limit = 8M
-query_cache_size = 256M #グローバルバッファ
-query_cache_type = 1
  
 # その他
 max_connections = 300
