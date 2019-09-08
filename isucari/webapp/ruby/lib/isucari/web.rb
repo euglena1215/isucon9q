@@ -81,7 +81,7 @@ module Isucari
       def batch_get_shippings_by(item_ids)
         sql = <<~SQL
           SELECT
-            *
+            reserve_id
           FROM `shippings`
           WHERE `item_id` IN (#{item_ids.join(',')})
         SQL
