@@ -78,6 +78,16 @@ module Isucari
         db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
       end
 
+      def batch_get_shippings_by(item_ids)
+        sql = <<~SQL
+          SELECT
+            *
+          FROM `shippings`
+          WHERE `item_id` IN (#{item_ids.join(',')})
+        SQL
+        db.xquery(sql).to_a.group_by{|i| i['item_id']}
+      end
+
       def batch_get_user_simple_by_id(user_ids)
         return [] if user_ids.empty?
 
