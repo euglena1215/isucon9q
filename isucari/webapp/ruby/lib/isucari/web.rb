@@ -85,7 +85,7 @@ module Isucari
           FROM `transaction_evidences`
           WHERE `item_id` IN (#{item_ids.join(',')})
         SQL
-        db.xquery(sql).to_a
+        db.xquery(sql).to_a.group_by(&:item_id)
       end
 
       def batch_get_user_simple_by_id(user_ids)
@@ -390,7 +390,7 @@ module Isucari
           item_detail['buyey'] = buyer
         end
 
-        transaction_evidence = transaction_evidences.select{|t| t['item_id'] == item['id']}.first
+        transaction_evidence = transaction_evidences[item['id']].first
         unless transaction_evidence.nil?
           shipping = db.xquery('SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?', transaction_evidence['id']).first
           if shipping.nil?
