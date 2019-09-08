@@ -609,7 +609,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'item not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -631,7 +635,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -660,7 +668,11 @@ module Isucari
           category['id'],
           category['parent_id']
         )
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -674,7 +686,11 @@ module Isucari
           WHERE `id` = ?
         SQL
         db.xquery(sql, buyer['id'], ITEM_STATUS_TRADING, Time.now, target_item['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -687,7 +703,11 @@ module Isucari
           from_address: seller['address'],
           from_name: seller['account_name']
         )
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'failed to request to shipment service'
       end
@@ -700,7 +720,11 @@ module Isucari
           api_key: PAYMENT_SERVICE_ISUCARI_APIKEY,
           price: target_item['price']
         )
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'payment service is failed'
       end
@@ -722,7 +746,11 @@ module Isucari
 
       begin
         db.xquery('INSERT INTO `shippings` (`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, `to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', transaction_evidence_id, SHIPPINGS_STATUS_INITIAL, target_item['name'], target_item['id'], scr['reserve_id'], scr['reserve_time'], buyer['address'], buyer['account_name'], seller['address'], seller['account_name'], '')
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -787,7 +815,11 @@ module Isucari
 
       begin
         db.xquery('INSERT INTO `items` (`seller_id`, `status`, `name`, `price`, `description`,`image_name`,`category_id`) VALUES (?, ?, ?, ?, ?, ?, ?)', seller['id'], ITEM_STATUS_ON_SALE, name, price, description, img_name, category['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -797,7 +829,11 @@ module Isucari
       now = Time.now
       begin
         db.xquery('UPDATE `users` SET `num_sell_items` = ?, `last_bump` = ? WHERE `id` = ?', seller['num_sell_items'] + 1, now, seller['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -831,7 +867,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'item not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -848,7 +888,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'transaction_evidences not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -865,21 +909,33 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'shippings not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         img = api_client.shipment_request(get_shipment_service_url, reserve_id: shipping['reserve_id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'failed to request to shipment service'
       end
 
       begin
         db.xquery('UPDATE `shippings` SET `status` = ?, `img_binary` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?', SHIPPINGS_STATUS_WAIT_PICKUP, img, Time.now, transaction_evidence['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -920,7 +976,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'items not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -937,7 +997,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'transaction_evidences not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -953,14 +1017,22 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'shippings not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         ssr = api_client.shipment_status(get_shipment_service_url, reserve_id: shipping['reserve_id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'failed to request to shipment service'
       end
@@ -972,14 +1044,22 @@ module Isucari
 
       begin
         db.xquery('UPDATE `shippings` SET `status` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?', ssr['status'], Time.now, transaction_evidence['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         db.xquery('UPDATE `transaction_evidences` SET `status` = ?, `updated_at` = ? WHERE `id` = ?', TRANSACTION_EVIDENCE_STATUS_WAIT_DONE, Time.now, transaction_evidence['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1020,7 +1100,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'items not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1037,7 +1121,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'transaction_evidences not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1054,14 +1142,22 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'shippings not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         ssr = api_client.shipment_status(get_shipment_service_url, reserve_id: shipping['reserve_id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'failed to request to shipment service'
       end
@@ -1073,21 +1169,33 @@ module Isucari
 
       begin
         db.xquery('UPDATE `shippings` SET `status` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?', SHIPPINGS_STATUS_DONE, Time.now, transaction_evidence['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         db.xquery('UPDATE `transaction_evidences` SET `status` = ?, `updated_at` = ? WHERE `id` = ?', TRANSACTION_EVIDENCE_STATUS_DONE, Time.now, transaction_evidence['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         db.xquery('UPDATE `items` SET `status` = ?, `updated_at` = ? WHERE `id` = ?', ITEM_STATUS_SOLD_OUT, Time.now, item_id)
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1147,7 +1255,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'item not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1164,7 +1276,11 @@ module Isucari
           db.query('ROLLBACK')
           halt_with_error 404, 'user not found'
         end
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
@@ -1177,21 +1293,33 @@ module Isucari
 
       begin
         db.xquery('UPDATE `items` SET `created_at` = ?, `updated_at` = ? WHERE id = ?', now, now, target_item['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         db.xquery('UPDATE `users` SET `last_bump` = ? WHERE id = ?', now, seller['id'])
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
 
       begin
         target_item = db.xquery('SELECT * FROM `items` WHERE `id` = ?', item_id).first
-      rescue
+      rescue => e
+        p ''
+        p e
+        p e.backtrace
+        p ''
         db.query('ROLLBACK')
         halt_with_error 500, 'db error'
       end
