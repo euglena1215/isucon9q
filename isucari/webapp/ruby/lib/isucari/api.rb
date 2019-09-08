@@ -13,6 +13,7 @@ module Isucari
     end
 
     def payment_token(payment_url, param)
+      start_time = Time.now
       uri = URI.parse("#{payment_url}/token")
 
       req = Net::HTTP::Post.new(uri.path)
@@ -28,10 +29,12 @@ module Isucari
         raise Error, "status code #{res.code}; body #{res.body}"
       end
 
+      p "API call payment_token: #{Time.now - start_time} sec"
       JSON.parse(res.body)
     end
 
     def shipment_create(shipment_url, param)
+      start_time = Time.now
       uri = URI.parse("#{shipment_url}/create")
 
       req = Net::HTTP::Post.new(uri.path)
@@ -48,10 +51,12 @@ module Isucari
         raise Error, "status code #{res.code}; body #{res.body}"
       end
 
+      p "API call shipment_create: #{Time.now - start_time} sec"
       JSON.parse(res.body)
     end
 
     def shipment_request(shipment_url, param)
+      start_time = Time.now
       uri = URI.parse("#{shipment_url}/request")
 
       req = Net::HTTP::Post.new(uri.path)
@@ -68,10 +73,12 @@ module Isucari
         raise Error, "status code #{res.code}; body #{res.body}"
       end
 
+      p "API call shipment_request: #{Time.now - start_time} sec"
       res.body
     end
 
     def shipment_status(shipment_url, param)
+      start_time = Time.now
       uri = URI.parse("#{shipment_url}/status")
 
       req = Net::HTTP::Post.new(uri.path)
@@ -88,6 +95,7 @@ module Isucari
         raise Error, "status code #{res.code}; body #{res.body}"
       end
 
+      p "API call shipment_status: #{Time.now - start_time} sec"
       JSON.parse(res.body)
     end
   end
