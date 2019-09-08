@@ -78,12 +78,12 @@ module Isucari
         db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
       end
 
-      def batch_get_shippings_by(item_ids)
+      def batch_get_shippings_by(transaction_evidence_ids)
         sql = <<~SQL
           SELECT
             reserve_id
           FROM `shippings`
-          WHERE `item_id` IN (#{item_ids.join(',')})
+          WHERE `transaction_evidence_id` IN (#{transaction_evidence_ids.join(',')})
         SQL
         db.xquery(sql).to_a.group_by{|i| i['item_id']}
       end
