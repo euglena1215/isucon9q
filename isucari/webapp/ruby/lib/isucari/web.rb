@@ -339,7 +339,8 @@ module Isucari
       end
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
-      item_details = items.zip(sellers).map do |item, seller|
+      buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
+      item_details = items.zip(sellers, buyers).map do |item, seller, buyers|
         if seller.nil?
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
@@ -371,7 +372,6 @@ module Isucari
         }
 
         if item['buyer_id'] != 0
-          buyer = get_user_simple_by_id(item['buyer_id'])
           if buyer.nil?
             db.query('ROLLBACK')
             halt_with_error 404, 'buyer not found'
@@ -440,8 +440,8 @@ module Isucari
         db.xquery("SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?, ?, ?) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", user_simple['id'], ITEM_STATUS_ON_SALE, ITEM_STATUS_TRADING, ITEM_STATUS_SOLD_OUT)
       end
 
-      item_simples = items.map do |item|
-        seller = get_user_simple_by_id(item['seller_id'])
+      sellers = batch_get_user_simple_by_id(items.map {|item| item['seller_id'] })
+      item_simples = items.zip(sellers).map do |item, seller|
         halt_with_error 404, 'seller not found' if seller.nil?
 
         category = get_category_by_id(item['category_id'])
