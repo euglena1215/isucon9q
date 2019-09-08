@@ -614,10 +614,6 @@ module Isucari
         halt_with_error 500, 'db error'
       end
 
-      if target_item['status'] != ITEM_STATUS_ON_SALE
-        halt_with_error 403, 'item is not for sale'
-      end
-
       if target_item['seller_id'] == buyer['id']
         halt_with_error 403, '自分の商品は買えません'
       end
@@ -644,6 +640,11 @@ module Isucari
       db.query('BEGIN')
 
       target_item = db.xquery('SELECT * FROM `items` WHERE `id` = ? FOR UPDATE', item_id).first
+
+      if target_item['status'] != ITEM_STATUS_ON_SALE
+        db.query('ROLLBACK')
+        halt_with_error 403, 'item is not for sale'
+      end
 
       begin
         sql = <<~SQL
