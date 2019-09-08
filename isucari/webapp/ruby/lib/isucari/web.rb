@@ -91,7 +91,7 @@ module Isucari
       end
 
       def get_category_by_id(category_id)
-        category = Thread.current[:categories].find{|c| c['id'] == category_id }
+        category = Thread.current[:categories].select{|c| c['id'] == category_id }.first
         return if category.nil?
 
         parent_category_name = if category['parent_id'] != 0
