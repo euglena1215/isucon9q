@@ -78,6 +78,30 @@ module Isucari
         db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
       end
 
+      def batch_get_user_simple_by_id(user_ids)
+        sql = <<~SQL
+          SELECT id, account_name, num_sell_items
+          FROM `users`
+          WHERE `id` IN (#{user_ids.join(',')})
+          ORDER BY FIELD(id, #{user_ids.join(',')})
+        SQL
+        users = db.xquery(sql).to_a
+        users_by_id = users.group_by {|user| user['id']}
+
+        user_ids.map do |user_id|
+          user = users_by_id[user_id]&.first
+          if user.nil?
+            nil
+          else
+            {
+              'id' => user['id'],
+              'account_name' => user['account_name'],
+              'num_sell_items' => user['num_sell_items']
+            }
+          end
+        end
+      end
+
       def get_user_simple_by_id(user_id)
         user = db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
 
@@ -176,10 +200,25 @@ module Isucari
 
       items = if item_id > 0 && created_at > 0
         # paging
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, Time.at(created_at), Time.at(created_at), item_id)
+        sql = <<~SQL
+          SELECT *
+          FROM `items`
+          WHERE `status` IN (?, ?)
+            AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?))
+          ORDER BY `created_at` DESC, `id` DESC
+          LIMIT #{ITEMS_PER_PAGE + 1}
+        SQL
+        db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT, Time.at(created_at), Time.at(created_at), item_id)
       else
         # 1st page
-        db.xquery("SELECT * FROM `items` WHERE `status` IN (?, ?) ORDER BY `created_at` DESC, `id` DESC LIMIT #{ITEMS_PER_PAGE + 1}", ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
+        sql = <<~SQL
+          SELECT *
+          FROM `items`
+          WHERE `status` IN (?, ?)
+          ORDER BY `created_at` DESC, `id` DESC
+          LIMIT #{ITEMS_PER_PAGE + 1}
+        SQL
+        db.xquery(sql, ITEM_STATUS_ON_SALE, ITEM_STATUS_SOLD_OUT)
       end
 
       item_simples = items.map do |item|
@@ -299,8 +338,8 @@ module Isucari
         end
       end
 
-      item_details = items.map do |item|
-        seller = get_user_simple_by_id(item['seller_id'])
+      sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
+      item_details = items.zip(sellers).map do |item, seller|
         if seller.nil?
           db.query('ROLLBACK')
           halt_with_error 404, 'seller not found'
@@ -1196,7 +1235,7 @@ module Isucari
     # getReports
     get '/reports.json' do
       transaction_evidences = db.xquery('SELECT * FROM `transaction_evidences` WHERE `id` > 15007')
-      
+
       response = transaction_evidences.map do |transaction_evidence|
         {
           'id' => transaction_evidence['id'],
