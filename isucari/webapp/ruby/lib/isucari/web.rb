@@ -78,6 +78,16 @@ module Isucari
         db.xquery('SELECT * FROM `users` WHERE `id` = ?', user_id).first
       end
 
+      def batch_get_transaction_evidences_by_item_ids(item_ids)
+        sql = <<~SQL
+          SELECT
+            id, status, item_id
+          FROM `transaction_evidences`
+          WHERE `item_id` IN (#{item_ids.join(',')})
+        SQL
+        db.xquery(sql).to_a.group_by{|i| i['item_id']}
+      end
+
       def batch_get_user_simple_by_id(user_ids)
         return [] if user_ids.empty?
 
@@ -340,6 +350,7 @@ module Isucari
 
       sellers = batch_get_user_simple_by_id(items.map { |i| i['seller_id'] })
       buyers = batch_get_user_simple_by_id(items.map { |i| i['buyer_id'] })
+      transaction_evidences = batch_get_transaction_evidences_by_item_ids(items.map{|i| i['id']})
 
       item_details = items.zip(sellers, buyers).map do |item, seller, buyer|
         if seller.nil?
@@ -379,7 +390,7 @@ module Isucari
           item_detail['buyey'] = buyer
         end
 
-        transaction_evidence = db.xquery('SELECT * FROM `transaction_evidences` WHERE `item_id` = ?', item['id']).first
+        transaction_evidence = transaction_evidences[item['id']]&.first
         unless transaction_evidence.nil?
           shipping = db.xquery('SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?', transaction_evidence['id']).first
           if shipping.nil?
