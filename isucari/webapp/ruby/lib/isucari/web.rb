@@ -614,7 +614,7 @@ module Isucari
       end
 
       begin
-        seller = db.xquery('SELECT * FROM `users` WHERE `id` = ? FOR UPDATE', target_item['seller_id']).first
+        seller = db.xquery('SELECT * FROM `users` WHERE `id` = ?', target_item['seller_id']).first
 
         if seller.nil?
           db.query('ROLLBACK')
