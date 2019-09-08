@@ -91,10 +91,8 @@ module Isucari
       end
 
       def get_category_by_id(category_id)
-        category = db.xquery('SELECT * FROM `categories` WHERE `id` = ?', category_id).first
-
+        category = categories.select{|c| c['id'] == category_id }.first
         return if category.nil?
-
         parent_category_name = if category['parent_id'] != 0
           parent_category = get_category_by_id(category['parent_id'])
 
@@ -164,6 +162,11 @@ module Isucari
       }
 
       response.to_json
+    end
+
+    def categories
+      Thread.current[:categories] ||= db.xquery('SELECT * FROM `categories`').to_a
+      Thread.current[:categories]
     end
 
     # getNewItems
@@ -1137,8 +1140,6 @@ module Isucari
       response['csrf_token'] = csrf_token
       response['user'] = user unless user.nil?
       response['payment_service_url'] = get_payment_service_url
-
-      categories = db.xquery('SELECT * FROM `categories`').to_a
       response['categories'] = categories
 
       response.to_json
